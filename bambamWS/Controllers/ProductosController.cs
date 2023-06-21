@@ -97,5 +97,69 @@ namespace bambamWS.Controllers
             return result;
         }
 
+        [HttpPost("eliminarProducto")]
+        public async Task<ActionResult<ResponseResult>> eliminarProducto(Producto proX)
+        {
+            ResponseResult result = new ResponseResult();
+            try
+            {
+                Producto theProd = await _context.productos.FindAsync(proX.proId);
+                theProd.proEstado = 0;
+                await _context.SaveChangesAsync();
+                result.ok = true;
+                result.msg = "Producto eliminado";
+            }
+            catch (Exception e)
+            {
+                result.ok = false;
+                result.msg = e.Message;
+            }
+
+            return result;
+        }
+
+        [HttpPost("obtenerProducto")]
+        public async Task<ActionResult<RREdtProducto>> obtProducto(Producto prodX)
+        {
+            RREdtProducto result = new RREdtProducto();
+            try
+            {
+                Producto theProd = await _context.productos.FindAsync(prodX.proId);
+                result.prod = theProd;
+                result.ok = true;
+                result.msg = "Producto obtenido";
+            }catch(Exception e)
+            {
+                result.ok = false;
+                result.msg = e.Message;
+            }
+            return result;
+        }
+
+        [HttpPost("editarProducto")]
+        public async Task<ActionResult<ResponseResult>> editarProducto(Producto prodX)
+        {
+            ResponseResult result = new ResponseResult();
+            try
+            {
+                Producto theProd = await _context.productos.FindAsync(prodX.proId);
+                theProd.proNombre = prodX.proNombre;
+                theProd.proDesc = prodX.proDesc;
+                theProd.proPrecio = prodX.proPrecio;
+                theProd.proCat = prodX.proCat;
+                theProd.proUni = prodX.proUni;
+
+                await _context.SaveChangesAsync();
+
+                result.ok = true;
+                result.msg = "Producto editado";
+            }
+            catch (Exception e)
+            {
+                result.ok = false;
+                result.msg = e.Message;
+            }
+            return result;
+        }
     }
 }
