@@ -18,5 +18,7 @@ namespace bambamWS.Models
         public string proUniNombre { get; set; } = "";
         [NotMapped]
         public string proCatNombre { get; set; } = "";
+        [NotMapped]
+        public decimal proStock { get; set; } = 0;
     }
 }

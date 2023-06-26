@@ -14,5 +14,6 @@ namespace bambamWS.Models
         public DbSet<Categoria> categorias { get; set; } = null!;
         public DbSet<Unidad> unidades { get; set; } = null!;
         public DbSet<Producto> productos { get; set; } = null!;
+        public DbSet<Ineg> inegs { get; set; } = null!;
     }
 }

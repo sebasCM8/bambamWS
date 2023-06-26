@@ -25,13 +25,17 @@ namespace bambamWS.Controllers
                                        join c in _context.categorias on p.proCat equals c.catId
                                        join u in _context.unidades on p.proUni equals u.uniId
                                        where p.proEstado == 1
-                                       select new { p, u.uniNombre, c.catNombre }).ToListAsync();
+                                       select new { p, u.uniNombre, c.catNombre, 
+                                       stockI = (from s in _context.inegs where s.iePro == p.proId && s.ieTipo == BambamConstantes.INGRESO select s.ieCant).DefaultIfEmpty().Sum(),
+                                       stockE = (from s in _context.inegs where s.iePro == p.proId && s.ieTipo == BambamConstantes.EGRESO select s.ieCant).DefaultIfEmpty().Sum() 
+                                       }).ToListAsync();
 
                 foreach (var item in productos)
                 {
                     Producto pp = item.p;
                     pp.proUniNombre = item.uniNombre;
                     pp.proCatNombre = item.catNombre;
+                    pp.proStock = item.stockI - item.stockE;
                     result.productos.Add(pp);
                 }
 
@@ -159,6 +163,26 @@ namespace bambamWS.Controllers
                 result.ok = false;
                 result.msg = e.Message;
             }
+            return result;
+        }
+
+        [HttpPost("nuevoingreso")]
+        public async Task<ActionResult<ResponseResult>> nuevoingreso(Ineg ieX)
+        {
+            ResponseResult result = new ResponseResult();
+
+            try
+            {
+                _context.inegs.Add(ieX);
+                await _context.SaveChangesAsync();
+                result.ok = true;
+                result.msg = "Ingreso registrado";
+            }catch(Exception e)
+            {
+                result.ok = false;
+                result.msg = e.Message;
+            }
+
             return result;
         }
     }

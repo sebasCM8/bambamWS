@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using bambamWS.Models;
+using Microsoft.Identity.Client;
 
 namespace bambamWS.Controllers
 {
@@ -45,84 +46,6 @@ namespace bambamWS.Controllers
             }
 
             return result;
-        }
-
-        // GET: api/Usuarios/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetUsuario(string id)
-        {
-          if (_context.Usuarios == null)
-          {
-              return NotFound();
-          }
-            var usuario = await _context.Usuarios.FindAsync(id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            return usuario;
-        }
-
-        // PUT: api/Usuarios/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuario(string id, Usuario usuario)
-        {
-            if (id != usuario.usuId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(usuario).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuarioExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Usuarios
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
-        {
-          if (_context.Usuarios == null)
-          {
-              return Problem("Entity set 'UsuarioContext.Usuarios'  is null.");
-          }
-            _context.Usuarios.Add(usuario);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (UsuarioExists(usuario.usuId))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return CreatedAtAction("GetUsuario", new { id = usuario.usuId }, usuario);
         }
 
         [HttpPost("login")]
@@ -251,29 +174,84 @@ namespace bambamWS.Controllers
             return result;
         }
 
-        // DELETE: api/Usuarios/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsuario(string id)
+        [HttpPost("registrarCliente")]
+        public async Task<ActionResult<ResponseResult>> registrarCliente(Usuario usuX)
         {
-            if (_context.Usuarios == null)
+            ResponseResult result = new ResponseResult();
+            try {
+                var usuExiste = await _context.Usuarios.FindAsync(usuX.usuId);
+                if(usuExiste != null)
+                {
+                    result.ok = false;
+                    result.msg = "Usuario ya existe";
+                    return result;
+                }
+                _context.Usuarios.Add(usuX);
+                await _context.SaveChangesAsync();
+                result.ok = true;
+                result.msg = "Usuario cliente registrado";
+            }catch(Exception e)
             {
-                return NotFound();
+                result.ok = false;
+                result.msg = e.Message;
             }
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return result;
         }
 
-        private bool UsuarioExists(string id)
+        [HttpPost("loginCliente")]
+        public async Task<ActionResult<ResponseResult>> loginCliente(Usuario usuX)
         {
-            return (_context.Usuarios?.Any(e => e.usuId == id)).GetValueOrDefault();
+            ResponseResult result = new ResponseResult();
+            try
+            {
+                var usu = await _context.Usuarios.Where(u => u.usuId == usuX.usuId && u.usuEstado == 1).FirstOrDefaultAsync();    
+                if(usu == null)
+                {
+                    result.ok = false;
+                    result.msg = "Datos incorrectoss";
+                    return result;
+                }
+                if(usu.usuPass != usuX.usuPass)
+                {
+                    result.ok = false;
+                    result.msg = "Datos incorrectos";
+                    return result;
+                }
+                result.ok = true;
+                result.msg = "Login exitoso";
+                return result;
+            }catch(Exception e)
+            {
+                result.ok = false;
+                result.msg = e.Message;
+            }
+            return result;
         }
+
+        [HttpGet("usuapitest")]
+        public async Task<ActionResult<RRObtRepartidores>> usuapitest()
+        {
+            RRObtRepartidores result = new RRObtRepartidores();
+            result.ok = true;
+            result.msg = "PRUEBA EXITOSA";
+            result.repartidores = new List<Usuario>();
+            string[] nombres = { "Pablo", "Jeremy", "Ana", "John", "Alicia", "Michelle", "Frank", "Jan", "Islam" };
+            int i = 0;
+            foreach(string nombre in nombres) 
+            {
+                i++;
+                Usuario nueUsu = new Usuario();
+                nueUsu.usuNombre = nombre;
+                nueUsu.usuId = "usuId" + i.ToString();
+                nueUsu.usuPass = "123";
+                nueUsu.usuApellido = "Dern Maia";
+                nueUsu.usuCelular = "77982182";
+                nueUsu.usuCI = "77921929";
+                nueUsu.usuEstado = 1;
+                result.repartidores.Add(nueUsu);
+            }
+            return result;
+        }
+
     }
 }
